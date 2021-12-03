@@ -239,7 +239,7 @@ class PurchasesOrchestratorTests: StoreKitConfigTestCase {
         let expectedStatus = RefundRequestStatus.userCancelled
         mockBeginRefundRequestHelper.maybeMockRefundRequestStatus = expectedStatus
 
-        orchestrator.beginRefundRequest(for: "1234") { status, maybeError in
+        orchestrator.beginRefundRequest(forProduct: "1234") { status, maybeError in
             completionCalled = true
             receivedError = maybeError
             receivedStatus = status
@@ -262,7 +262,7 @@ class PurchasesOrchestratorTests: StoreKitConfigTestCase {
         var completionCalled = false
         var receivedStatus: RefundRequestStatus?
 
-        orchestrator.beginRefundRequest(for: "1235") { status, maybeError in
+        orchestrator.beginRefundRequest(forProduct: "1235") { status, maybeError in
             completionCalled = true
             receivedError = maybeError
             receivedStatus = status
