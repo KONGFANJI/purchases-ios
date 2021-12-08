@@ -63,6 +63,24 @@ class PurchasesOrchestratorTests: StoreKitConfigTestCase {
         mockBeginRefundRequestHelper = MockBeginRefundRequestHelper(systemInfo: systemInfo,
                                                                     customerInfoManager: customerInfoManager,
                                                                     identityManager: identityManager)
+        setUpOrchestrator()
+        setUpStoreKit2Listener()
+    }
+
+    fileprivate func setUpStoreKit2Listener() {
+        if #available(iOS 15.0, tvOS 15.0, watchOS 8.0, macOS 12.0, *) {
+            orchestrator.storeKit2Listener = MockStoreKit2TransactionListener()
+        }
+    }
+
+    fileprivate func setUpSystemInfo() throws {
+        systemInfo = try MockSystemInfo(platformFlavor: "xyz",
+                                        platformFlavorVersion: "1.2.3",
+                                        finishTransactions: true,
+                                        useStoreKit2IfAvailable: true)
+    }
+
+    fileprivate func setUpOrchestrator() {
         orchestrator = PurchasesOrchestrator(productsManager: productsManager,
                                              storeKitWrapper: storeKitWrapper,
                                              systemInfo: systemInfo,
@@ -76,19 +94,6 @@ class PurchasesOrchestratorTests: StoreKitConfigTestCase {
                                              deviceCache: deviceCache,
                                              manageSubscriptionsHelper: mockManageSubsHelper,
                                              beginRefundRequestHelper: mockBeginRefundRequestHelper)
-        setUpStoreKit2Listener()
-    }
-
-    fileprivate func setUpStoreKit2Listener() {
-        if #available(iOS 15.0, tvOS 15.0, watchOS 8.0, macOS 12.0, *) {
-            orchestrator.storeKit2Listener = MockStoreKit2TransactionListener()
-        }
-    }
-
-    fileprivate func setUpSystemInfo() throws {
-        systemInfo = try MockSystemInfo(platformFlavor: "xyz",
-                                        platformFlavorVersion: "1.2.3",
-                                        finishTransactions: true)
     }
 
     // - Note: Xcode throws a warning about @available and #available being redundant, but they're actually necessary:
@@ -234,7 +239,7 @@ class PurchasesOrchestratorTests: StoreKitConfigTestCase {
     @available(watchOS, unavailable)
     @available(tvOS, unavailable)
     @available(macOS, unavailable)
-    func testBeginRefundRequestCallsCompletionWithoutErrorAndPassesThroughStatusIfSuccessful() {
+    func testBeginRefundForProductCompletesWithoutErrorAndPassesThroughStatusIfSuccessful() {
         var receivedError: Error?
         var receivedStatus: RefundRequestStatus?
         var completionCalled = false
@@ -256,7 +261,7 @@ class PurchasesOrchestratorTests: StoreKitConfigTestCase {
     @available(watchOS, unavailable)
     @available(tvOS, unavailable)
     @available(macOS, unavailable)
-    func testBeginRefundRequestCallsCompletionWithErrorIfThereIsAFailure() {
+    func testBeginRefundForProductCompletesWithErrorIfThereIsAFailure() {
         let expectedError = ErrorUtils.beginRefundRequestError(withMessage: "test")
         mockBeginRefundRequestHelper.maybeMockError = expectedError
 
@@ -275,6 +280,99 @@ class PurchasesOrchestratorTests: StoreKitConfigTestCase {
         expect(receivedStatus) == RefundRequestStatus.error
         expect(receivedError).to(matchError(expectedError))
     }
+
+    @available(iOS 15.0, macCatalyst 15.0, *)
+    @available(watchOS, unavailable)
+    @available(tvOS, unavailable)
+    @available(macOS, unavailable)
+    func testBeginRefundForEntitlementCompletesWithoutErrorAndPassesThroughStatusIfSuccessful() {
+        var receivedError: Error?
+        var receivedStatus: RefundRequestStatus?
+        var completionCalled = false
+        let expectedStatus = RefundRequestStatus.userCancelled
+        mockBeginRefundRequestHelper.maybeMockRefundRequestStatus = expectedStatus
+
+        orchestrator.beginRefundRequest(forEntitlement: "1234") { status, maybeError in
+            completionCalled = true
+            receivedError = maybeError
+            receivedStatus = status
+        }
+
+        expect(receivedStatus) == expectedStatus
+        expect(completionCalled).toEventually(beTrue())
+        expect(receivedError).to(beNil())
+    }
+
+    @available(iOS 15.0, macCatalyst 15.0, *)
+    @available(watchOS, unavailable)
+    @available(tvOS, unavailable)
+    @available(macOS, unavailable)
+    func testBeginRefundForEntitlementCompletesWithErrorIfThereIsAFailure() {
+        let expectedError = ErrorUtils.beginRefundRequestError(withMessage: "test")
+        mockBeginRefundRequestHelper.maybeMockError = expectedError
+
+        var receivedError: Error?
+        var completionCalled = false
+        var receivedStatus: RefundRequestStatus?
+
+        orchestrator.beginRefundRequest(forEntitlement: "1234") { status, maybeError in
+            completionCalled = true
+            receivedError = maybeError
+            receivedStatus = status
+        }
+
+        expect(completionCalled).toEventually(beTrue())
+        expect(receivedError).toNot(beNil())
+        expect(receivedStatus) == RefundRequestStatus.error
+        expect(receivedError).to(matchError(expectedError))
+    }
+
+    @available(iOS 15.0, macCatalyst 15.0, *)
+    @available(watchOS, unavailable)
+    @available(tvOS, unavailable)
+    @available(macOS, unavailable)
+    func testBeginRefundForActiveEntitlementCompletesWithoutErrorAndPassesThroughStatusIfSuccessful() {
+        var receivedError: Error?
+        var receivedStatus: RefundRequestStatus?
+        var completionCalled = false
+        let expectedStatus = RefundRequestStatus.userCancelled
+        mockBeginRefundRequestHelper.maybeMockRefundRequestStatus = expectedStatus
+
+        orchestrator.beginRefundRequestForActiveEntitlement { status, maybeError in
+            completionCalled = true
+            receivedError = maybeError
+            receivedStatus = status
+        }
+
+        expect(receivedStatus) == expectedStatus
+        expect(completionCalled).toEventually(beTrue())
+        expect(receivedError).to(beNil())
+    }
+
+    @available(iOS 15.0, macCatalyst 15.0, *)
+    @available(watchOS, unavailable)
+    @available(tvOS, unavailable)
+    @available(macOS, unavailable)
+    func testBeginRefundForActiveEntitlementCompletesWithErrorIfThereIsAFailure() {
+        let expectedError = ErrorUtils.beginRefundRequestError(withMessage: "test")
+        mockBeginRefundRequestHelper.maybeMockError = expectedError
+
+        var receivedError: Error?
+        var completionCalled = false
+        var receivedStatus: RefundRequestStatus?
+
+        orchestrator.beginRefundRequestForActiveEntitlement { status, maybeError in
+            completionCalled = true
+            receivedError = maybeError
+            receivedStatus = status
+        }
+
+        expect(completionCalled).toEventually(beTrue())
+        expect(receivedError).toNot(beNil())
+        expect(receivedStatus) == RefundRequestStatus.error
+        expect(receivedError).to(matchError(expectedError))
+    }
+
 
 }
 
