@@ -1257,7 +1257,7 @@ public extension Purchases {
      * - Parameter completion: A completion block that is called when the modal is closed.
      * If the request was successful, there will be a `RefundRequestStatus`.
      * Keep in mind the status could be `userCancelled`
-     * If the request was unsuccessful, there will be an `Error`.
+     * If the request was unsuccessful or entitlement could not be found, there will be an `Error`.
      */
     @available(iOS 15.0, *)
     @available(macOS, unavailable)
@@ -1290,9 +1290,8 @@ public extension Purchases {
      * the latest transaction associated with the productID
      *
      * - Parameter productID: The productID to begin a refund request for.
-     * If the request was successful, there will be a `RefundRequestStatus`.
-     * Keep in mind the status could be `userCancelled`
-     * If the request was unsuccessful, there will be an `Error`.
+     * - returns RefundRequestStatus: The status of the refund request (keep in mind the status could be `userCancelled`)
+     * If the request was unsuccessful, there will be an `Error` thrown.
      */
     @available(iOS 15.0, *)
     @available(macOS, unavailable)
@@ -1307,9 +1306,8 @@ public extension Purchases {
      * the latest transaction associated with the entitlement ID
      *
      * - Parameter entitlementID: The entitlementID to begin a refund request for.
-     * If the request was successful, there will be a `RefundRequestStatus`.
-     * Keep in mind the status could be `userCancelled`
-     * If the request was unsuccessful, there will be an `Error`.
+     * - returns RefundRequestStatus: The status of the refund request (keep in mind the status could be `userCancelled`)
+     * If the request was unsuccessful or the entitlement could not be found, there will be an `Error` thrown.
      */
     @available(iOS 15.0, *)
     @available(macOS, unavailable)
@@ -1323,9 +1321,8 @@ public extension Purchases {
      * Presents a refund request sheet in the current window scene for
      * the latest transaction associated with the active entitlement.
      *
-     * If the request was successful, there will be a `RefundRequestStatus`.
-     * Keep in mind the status could be `userCancelled`
-     * If the request was unsuccessful or there is no active entitlement, there will be an `Error`.
+     * - returns RefundRequestStatus: The status of the refund request (keep in mind the status could be `userCancelled`)
+     * If the request was unsuccessful or there is no active entitlement, there will be an `Error` thrown.
      */
     @available(iOS 15.0, *)
     @available(macOS, unavailable)

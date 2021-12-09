@@ -373,7 +373,6 @@ class PurchasesOrchestratorTests: StoreKitConfigTestCase {
         expect(receivedError).to(matchError(expectedError))
     }
 
-
 }
 
 private extension PurchasesOrchestratorTests {
